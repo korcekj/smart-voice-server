@@ -1,3 +1,4 @@
+#include "FirebaseESP8266.h"
 #include "ESP8266_Server.h"
 #include "Config.h"
 #include <ESP8266mDNS.h>
@@ -8,11 +9,13 @@ FirebaseData firebaseData;
 
 ESP8266_Server::ESP8266_Server(ESP8266WebServer *server) {
     this->server = server;
+    this->hardware = ESP8266_Hardware();
 }
 
 void ESP8266_Server::init() {
     this->serverInit();
     this->firebaseInit();
+    this->hardwareInit();
 }
 
 void ESP8266_Server::serverInit() {
@@ -27,6 +30,15 @@ void ESP8266_Server::firebaseInit() {
     Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
     this->setFirebaseRootPath();
     Firebase.setString(firebaseData, this->firebaseRootPath + "/url", this->url);
+}
+
+void ESP8266_Server::hardwareInit() {
+    this->hardwareLedsInit();
+}
+
+void ESP8266_Server::hardwareLedsInit() {
+    Firebase.getJSON(firebaseData, this->firebaseRootPath + "/leds");
+    hardware.initLeds(firebaseData.jsonData());
 }
 
 void ESP8266_Server::connect() {
@@ -105,4 +117,8 @@ String ESP8266_Server::getDashedMacAddress() {
 
 String ESP8266_Server::getUrl() {
     return this->url;
+}
+
+ESP8266_Hardware ESP8266_Server::getHardware() {
+    return this->hardware;
 }

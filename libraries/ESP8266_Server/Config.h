@@ -2,7 +2,6 @@
 #define STAPSK "kotiak123"
 #define STADNS_BASE "smart-voice-server"
 
-
 #define HTTP_OK 200
 #define HTTP_BAD_REQUEST 400
 #define HTTP_NOT_FOUND 404

@@ -2,12 +2,14 @@
 #define ESP8266_SERVER_H
 
 #include <Arduino.h>
-#include "FirebaseESP8266.h"
+#include "ESP8266_Hardware.h"
 #include <ESP8266WebServer.h>
 
-class ESP8266_Server {
+class ESP8266_Server 
+{
 private:
     ESP8266WebServer *server;
+    ESP8266_Hardware hardware;
     IPAddress ip;
     String mac;
     String url;
@@ -16,6 +18,8 @@ private:
 
     void serverInit();
     void firebaseInit();
+    void hardwareInit();
+    void hardwareLedsInit();
     void connect();
     void runDns();
     void createResponseJSON(char *, int, const char *, const char *);
@@ -34,6 +38,8 @@ public:
     String getIpAddress();
     String getMacAddress();
     String getUrl();
+    ESP8266_Hardware getHardware();
+
 };
 
 #endif // ESP8266_SERVER_H
