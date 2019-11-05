@@ -10,7 +10,9 @@ class ESP8266_Hardware
 private:
     std::map<String, Led> leds;
 
-    void initLed(String, String);
+    void initLed(String, String, Led *);
+    void parseJsonToData(String, String, bool, Led *, void (ESP8266_Hardware::*)(String, String, Led *));
+    void parseLedProperties(String, String, Led *);
 
 public:
     ESP8266_Hardware();
@@ -18,6 +20,7 @@ public:
     void initLeds(String);
 
     String getLed(String);
+    String getLeds();
 
 };
 

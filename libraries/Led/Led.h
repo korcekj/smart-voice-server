@@ -32,7 +32,7 @@ public:
     void setBrightnessOfStrip(uint8_t);
     void setName(String);
 
-    String getName();
+    String toString();
     
 };
 

@@ -15,11 +15,12 @@ private:
     String url;
     bool dnsRunning;
     String firebaseRootPath;
+    String firebaseError;
 
     void serverInit();
     void firebaseInit();
     void hardwareInit();
-    void hardwareLedsInit();
+    void hardwareLedsInit(String);
     void connect();
     void runDns();
     void createResponseJSON(char *, int, const char *, const char *);
@@ -38,6 +39,7 @@ public:
     String getIpAddress();
     String getMacAddress();
     String getUrl();
+    String getFirebaseError();
     ESP8266_Hardware getHardware();
 
 };

@@ -29,16 +29,19 @@ void ESP8266_Server::serverInit() {
 void ESP8266_Server::firebaseInit() {
     Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
     this->setFirebaseRootPath();
-    Firebase.setString(firebaseData, this->firebaseRootPath + "/url", this->url);
+    Firebase.setString(firebaseData, this->firebaseRootPath + "/data/url", this->url);
 }
 
 void ESP8266_Server::hardwareInit() {
-    this->hardwareLedsInit();
+    this->hardwareLedsInit(this->firebaseRootPath + "/hardware/leds");
 }
 
-void ESP8266_Server::hardwareLedsInit() {
-    Firebase.getJSON(firebaseData, this->firebaseRootPath + "/leds");
-    hardware.initLeds(firebaseData.jsonData());
+void ESP8266_Server::hardwareLedsInit(String path) {
+    if (Firebase.getJSON(firebaseData, path)) {
+        hardware.initLeds(firebaseData.jsonData());
+    } else {
+        this->firebaseError = "Firebase: getJson()";
+    }
 }
 
 void ESP8266_Server::connect() {
@@ -117,6 +120,10 @@ String ESP8266_Server::getDashedMacAddress() {
 
 String ESP8266_Server::getUrl() {
     return this->url;
+}
+
+String ESP8266_Server::getFirebaseError() {
+    return this->firebaseError;
 }
 
 ESP8266_Hardware ESP8266_Server::getHardware() {
