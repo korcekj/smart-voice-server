@@ -28,6 +28,8 @@ private:
     String getDashedMacAddress();
     String setFirebaseRootPath();
 
+    void handleCreateLed(String, HTTPMethod = HTTP_POST);
+
 public:
     ESP8266_Server(ESP8266WebServer *);
 
@@ -35,6 +37,7 @@ public:
     void update();
     void handleRoot(String = "/", HTTPMethod = HTTP_GET);
     void handleNotFound();
+    void handleLed(String = "/led");
 
     String getIpAddress();
     String getMacAddress();

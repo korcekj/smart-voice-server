@@ -29,6 +29,8 @@ void ESP8266_Server::serverInit() {
 void ESP8266_Server::firebaseInit() {
     Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
     this->setFirebaseRootPath();
+    //Set database read timeout to 1 minute (max 15 minutes)
+    Firebase.setReadTimeout(firebaseData, 1000 * 60);
     Firebase.setString(firebaseData, this->firebaseRootPath + "/data/url", this->url);
 }
 
@@ -37,11 +39,10 @@ void ESP8266_Server::hardwareInit() {
 }
 
 void ESP8266_Server::hardwareLedsInit(String path) {
-    if (Firebase.getJSON(firebaseData, path)) {
-        hardware.initLeds(firebaseData.jsonData());
-    } else {
-        this->firebaseError = "Firebase: getJson()";
-    }
+    int id = 1;
+    while(Firebase.getJSON(firebaseData, path + "/led" + String(id)))
+        this->hardware.initLed("/led" + String(id++), firebaseData.jsonData());
+    this->firebaseError = firebaseData.errorReason();
 }
 
 void ESP8266_Server::connect() {
@@ -72,7 +73,7 @@ void ESP8266_Server::update() {
 
 void ESP8266_Server::handleRoot(String url, HTTPMethod method) {
     this->server->on(url, method, [this]() {
-        this->sendResponse(HTTP_OK, "success", "Welcome !");
+        this->sendResponse(HTTP_OK, "success", "ESP8266 API");
     });
 }
 
@@ -80,7 +81,27 @@ void ESP8266_Server::handleNotFound() {
     this->server->onNotFound([this]() {
         this->sendResponse(HTTP_NOT_FOUND, "error", "Operation was not found.");
     });
-};
+}
+
+void ESP8266_Server::handleLed(String url) {
+    this->handleCreateLed(url, HTTP_POST);
+}
+
+void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
+    this->server->on(url, method, [this]() {
+        String jsonData = this->server->arg(0);
+        String id = this->hardware.createLed(jsonData);
+
+        if (id.length()) {
+            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/leds/" + id, FirebaseJson().setJsonData(jsonData)))
+                this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
+            else 
+                this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+        } else {
+            this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+        }
+    });
+}
 
 void ESP8266_Server::createResponseJSON(char *json, int status, const char *rate, const char *message) {
     const int capacity = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(3);

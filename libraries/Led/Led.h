@@ -3,17 +3,18 @@
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include "Config.h"
 #include <vector>
 
 class Led {
 private:
     Adafruit_NeoPixel strip;
     uint8_t esp8266Pin;
-    int statusOfStrip;
+    int statusOfStrip = L_OFF;
     uint16_t numLedsOnStrip;
-    int activeMode;
-    uint8_t waitTime;
-    uint8_t brightnessOfStrip;
+    int activeMode = MODE_ZERO;
+    uint8_t waitTime = MIN_MS;
+    uint8_t brightnessOfStrip = MAX_BRIGHTNESS;
     std::vector<std::vector<uint8_t>> colors;
     String name;
 
@@ -30,6 +31,7 @@ public:
     void setActiveMode(int);
     void setWaitTime(uint8_t);
     void setBrightnessOfStrip(uint8_t);
+    void setColorBytes(uint8_t, uint8_t, uint8_t);
     void setName(String);
 
     String toString();

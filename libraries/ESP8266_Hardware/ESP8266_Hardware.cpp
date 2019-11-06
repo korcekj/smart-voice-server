@@ -4,11 +4,25 @@
 
 ESP8266_Hardware::ESP8266_Hardware() {}
 
-void ESP8266_Hardware::initLeds(String jsonData) {
-    this->parseJsonToData(jsonData, "led", true, nullptr, &ESP8266_Hardware::initLed);
+void ESP8266_Hardware::initLed(String id, String jsonData) {
+    Led led = Led();
+
+    this->parseJsonToData(jsonData, "led", false, &led, &ESP8266_Hardware::parseLedProperties);
+    this->leds.insert(std::pair<String, Led>(id, led));
 }
 
-void ESP8266_Hardware::parseJsonToData(String jsonData, String dataName, bool isEqual, Led *led, void (ESP8266_Hardware::*f)(String, String, Led *)) {
+String ESP8266_Hardware::createLed(String jsonData) {
+    jsonData.trim();
+    if (jsonData.length() == 0) 
+        return "";
+
+    String id = "led" + String(this->leds.size() + 1);
+    this->initLed(id, jsonData);
+
+    return id;
+}
+
+void ESP8266_Hardware::parseJsonToData(String jsonData, String dataName, bool isEqual, Led *led, void (ESP8266_Hardware::*f)(String, String, void *)) {
     String key, value;
 
     FirebaseJson json;
@@ -32,19 +46,8 @@ void ESP8266_Hardware::parseJsonToData(String jsonData, String dataName, bool is
     }
 }
 
-void ESP8266_Hardware::initLed(String id, String jsonData, Led *l) {
-    Led led;
-
-    if (l == nullptr)
-        led = Led();
-    else 
-        led = *l;
-
-    this->parseJsonToData(jsonData, "led", false, &led, &ESP8266_Hardware::parseLedProperties);
-    this->leds.insert(std::pair<String, Led>(id, led));
-}
-
-void ESP8266_Hardware::parseLedProperties(String key, String value, Led *led) {
+void ESP8266_Hardware::parseLedProperties(String key, String value, void *l) {
+    Led *led = (Led*)l;
     if (key == P_BRIGHTNESS)
         led->setBrightnessOfStrip(value.toInt());
     else if (key == P_MODE)
@@ -59,6 +62,20 @@ void ESP8266_Hardware::parseLedProperties(String key, String value, Led *led) {
         led->setStatusOfStrip(value.toInt());
     else if (key == P_WAIT)
         led->setWaitTime(value.toInt());
+    else if (key == P_COLORS)
+        this->parseJsonToData(value, "color", true, led, &ESP8266_Hardware::parseColorBytes);
+}
+
+void ESP8266_Hardware::parseColorBytes(String id, String jsonData, void *l) {
+    Led *led = (Led*)l;
+    FirebaseJson json;
+    uint8_t r, g, b;
+
+    json.setJsonData(jsonData);
+    r = json.parse().get("r").parseResult().intValue;
+    g = json.parse().get("g").parseResult().intValue;
+    b = json.parse().get("b").parseResult().intValue;
+    led->setColorBytes(r, g, b);
 }
 
 String ESP8266_Hardware::getLed(String key) {

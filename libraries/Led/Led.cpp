@@ -1,5 +1,4 @@
 #include "Led.h"
-#include "Config.h"
 
 Led::Led() {}
 
@@ -26,7 +25,7 @@ void Led::setEsp8266Pin(uint8_t pin){
 }
 
 void Led::setStatusOfStrip(int status){
-    if (status == 0 || status == 1) 
+    if (status == L_OFF || status == L_ON) 
         this->statusOfStrip = status;
     else 
         this->statusOfStrip = 0;
@@ -56,6 +55,14 @@ void Led::setBrightnessOfStrip(uint8_t brightness){
     this->brightnessOfStrip = brightness;
 }
 
+void Led::setColorBytes(uint8_t r, uint8_t g, uint8_t b) {
+    std::vector<uint8_t> color;
+    color.push_back(r);
+    color.push_back(g);
+    color.push_back(b);
+    this->colors.push_back(color);
+}
+
 void Led::setName(String name){
     this->name = name;
 }
@@ -68,6 +75,17 @@ String Led::toString() {
     result += "Mode: " + String(this->activeMode) + ", ";
     result += "Pin: " + String(this->esp8266Pin) + ", ";
     result += "Brightness: " + String(this->brightnessOfStrip) + ", ";
+
+    for (auto &color : this->colors)
+    {
+        result += "color: ( ";
+        for (auto &byte : color)
+        {
+            result += String(byte) + " ";
+        }
+        result += "), ";
+    }
+
     result += "Wait: " + String(this->waitTime) + ", ";
     result += "NumLeds: " + String(this->numLedsOnStrip);
 

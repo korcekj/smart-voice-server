@@ -6,3 +6,4 @@
 #define P_PIN "pin"
 #define P_STATUS "status"
 #define P_WAIT "wait"
+#define P_COLORS "colors"
