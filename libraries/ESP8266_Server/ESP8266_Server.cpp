@@ -41,7 +41,7 @@ void ESP8266_Server::hardwareInit() {
 void ESP8266_Server::hardwareLedsInit(String path) {
     int id = 1;
     while(Firebase.getJSON(firebaseData, path + "/led" + String(id)))
-        this->hardware.initLed("/led" + String(id++), firebaseData.jsonData());
+        this->hardware.initLed("/led" + String(id++), firebaseData.jsonData(), true);
     this->firebaseError = firebaseData.errorReason();
 }
 
@@ -72,13 +72,13 @@ void ESP8266_Server::update() {
 }
 
 void ESP8266_Server::handleRoot(String url, HTTPMethod method) {
-    this->server->on(url, method, [this]() {
+    this->server->on(url, method, [=]() {
         this->sendResponse(HTTP_OK, "success", "ESP8266 API");
     });
 }
 
 void ESP8266_Server::handleNotFound() {
-    this->server->onNotFound([this]() {
+    this->server->onNotFound([=]() {
         this->sendResponse(HTTP_NOT_FOUND, "error", "Operation was not found.");
     });
 }
@@ -88,12 +88,13 @@ void ESP8266_Server::handleLed(String url) {
 }
 
 void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
-    this->server->on(url, method, [this]() {
+    this->server->on(url, method, [=]() {
         String jsonData = this->server->arg(0);
         String id = this->hardware.createLed(jsonData);
 
         if (id.length()) {
-            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/leds/" + id, FirebaseJson().setJsonData(jsonData)))
+            String json = this->hardware.getLed(id)->toString();
+            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/leds/" + id, FirebaseJson().setJsonData(json)))
                 this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
             else 
                 this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");

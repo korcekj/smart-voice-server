@@ -4,22 +4,41 @@
 
 ESP8266_Hardware::ESP8266_Hardware() {}
 
-void ESP8266_Hardware::initLed(String id, String jsonData) {
-    Led led = Led();
+bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
+    if (create && !this->existsLed(id)) {
+        Led led = Led();
+        this->parseJsonToData(jsonData, "led", false, &led, &ESP8266_Hardware::parseLedProperties);
+        this->leds.insert(std::pair<String, Led>(id, led));
+        return true;
+    } else if (this->existsLed(id)) {
+        Led *led = this->getLed(id);
+        this->parseJsonToData(jsonData, "led", false, led, &ESP8266_Hardware::parseLedProperties);
+        return true;
+    }
 
-    this->parseJsonToData(jsonData, "led", false, &led, &ESP8266_Hardware::parseLedProperties);
-    this->leds.insert(std::pair<String, Led>(id, led));
+    return false;
+}
+
+bool ESP8266_Hardware::requiredLed(String jsonData) {
+    FirebaseJson json;
+    json.setJsonData(jsonData);
+
+    String name = json.parse().get("name").parseResult().stringValue;
+    int numLeds = json.parse().get("numLeds").parseResult().intValue;
+
+    if (name == "" || numLeds == 0)
+        return false;
+    return true;
 }
 
 String ESP8266_Hardware::createLed(String jsonData) {
-    jsonData.trim();
-    if (jsonData.length() == 0) 
+    if (!this->requiredLed(jsonData)) 
         return "";
 
     String id = "led" + String(this->leds.size() + 1);
-    this->initLed(id, jsonData);
+    bool success = this->initLed(id, jsonData, true);
 
-    return id;
+    return success ? id : "";
 }
 
 void ESP8266_Hardware::parseJsonToData(String jsonData, String dataName, bool isEqual, Led *led, void (ESP8266_Hardware::*f)(String, String, void *)) {
@@ -78,14 +97,20 @@ void ESP8266_Hardware::parseColorBytes(String id, String jsonData, void *l) {
     led->setColorBytes(r, g, b);
 }
 
-String ESP8266_Hardware::getLed(String key) {
+Led *ESP8266_Hardware::getLed(String key) {
     std::map<String, Led>::iterator it;
     it = this->leds.find(key);
 
     if (it == this->leds.end())
-        return "";
+        return nullptr;
 
-    return it->second.toString();
+    return &it->second;
+}
+
+bool ESP8266_Hardware::existsLed(String key) {
+    if (this->getLed(key) == nullptr)
+        return false;
+    return true;
 }
 
 String ESP8266_Hardware::getLeds() {

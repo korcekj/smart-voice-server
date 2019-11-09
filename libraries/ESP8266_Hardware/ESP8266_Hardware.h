@@ -14,13 +14,16 @@ private:
     void parseLedProperties(String, String, void *);
     void parseColorBytes(String, String, void *);
 
+    bool existsLed(String);
+    bool requiredLed(String);
+
 public:
     ESP8266_Hardware();
 
-    void initLed(String, String);
+    bool initLed(String, String, bool);
     String createLed(String);
 
-    String getLed(String);
+    Led *getLed(String);
     String getLeds();
 };
 

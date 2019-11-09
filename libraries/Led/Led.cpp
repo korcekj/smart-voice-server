@@ -20,46 +20,44 @@ void Led::init() {
 
 void Led::setEsp8266Pin(uint8_t pin){
     if (pin < MIN_ESP8266_PIN || pin > MAX_ESP8266_PIN)
-        this->esp8266Pin = DEFAULT_ESP8266_PIN;
+        return;
     this->esp8266Pin = pin;
 }
 
 void Led::setStatusOfStrip(int status){
     if (status == L_OFF || status == L_ON) 
         this->statusOfStrip = status;
-    else 
-        this->statusOfStrip = 0;
 }
 
 void Led::setNumLedsOnStrip(uint16_t numLeds){
     if (numLeds < 1)
-        this->numLedsOnStrip = MIN_NUM_OF_LEDS;
+        return;
     this->numLedsOnStrip = numLeds;
 }
 
 void Led::setActiveMode(int mode){
     if (mode != MODE_ZERO && mode != MODE_ONE && mode != MODE_TWO)
-        this->activeMode = MODE_ZERO;
+        return;
     this->activeMode = mode;
 }
 
 void Led::setWaitTime(uint8_t ms){
     if (ms < MIN_MS || ms > MAX_MS)
-        this->waitTime = 0;
+        return;
     this->waitTime = ms;
 }
 
 void Led::setBrightnessOfStrip(uint8_t brightness){
     if (brightness < MIN_BRIGHTNESS || brightness > MAX_BRIGHTNESS)
-        this->brightnessOfStrip = MAX_BRIGHTNESS;
+        return;
     this->brightnessOfStrip = brightness;
 }
 
 void Led::setColorBytes(uint8_t r, uint8_t g, uint8_t b) {
-    std::vector<uint8_t> color;
-    color.push_back(r);
-    color.push_back(g);
-    color.push_back(b);
+    std::map<String, uint8_t> color;
+    color.insert(std::pair<String, uint8_t>("r", r));
+    color.insert(std::pair<String, uint8_t>("g", g));
+    color.insert(std::pair<String, uint8_t>("b", b));
     this->colors.push_back(color);
 }
 
@@ -68,26 +66,30 @@ void Led::setName(String name){
 }
 
 String Led::toString() {
-    String result = "";
+    uint8_t id = 1;
+    String result = "{";
 
-    result += "Name: " + this->name + ", ";
-    result += "Status: " + String(this->statusOfStrip) + ", ";
-    result += "Mode: " + String(this->activeMode) + ", ";
-    result += "Pin: " + String(this->esp8266Pin) + ", ";
-    result += "Brightness: " + String(this->brightnessOfStrip) + ", ";
+    result += "\"name\":\"" + this->name + "\",";
+    result += "\"status\":" + String(this->statusOfStrip) + ",";
+    result += "\"mode\":" + String(this->activeMode) + ",";
+    result += "\"pin\":" + String(this->esp8266Pin) + ",";
+    result += "\"brightness\":" + String(this->brightnessOfStrip) + ",";
+    result += "\"wait\":" + String(this->waitTime) + ",";
+    result += "\"numLeds\":" + String(this->numLedsOnStrip) + ",";
+    result += "\"colors\":{";
 
-    for (auto &color : this->colors)
-    {
-        result += "color: ( ";
-        for (auto &byte : color)
+    for(std::vector<int>::size_type i = 0; i != this->colors.size(); i++) {
+        result += "\"color" + String(id++) + "\":{";
+        int counter = 0;
+        for (auto &byte : this->colors[i])
         {
-            result += String(byte) + " ";
+            result += "\"" + byte.first + "\":" + String(byte.second);
+            if (++counter < 3) result += ",";
         }
-        result += "), ";
+        result += "}";
+        if (i < this->colors.size() - 1) result += ",";
     }
-
-    result += "Wait: " + String(this->waitTime) + ", ";
-    result += "NumLeds: " + String(this->numLedsOnStrip);
+    result += "}}";
 
     return result;
 }
