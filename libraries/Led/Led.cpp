@@ -65,7 +65,7 @@ void Led::setName(String name){
     this->name = name;
 }
 
-String Led::toString() {
+String Led::toJSON() {
     uint8_t id = 1;
     String result = "{";
 

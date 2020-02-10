@@ -4,26 +4,30 @@
 #include <Arduino.h>
 #include "Led.h"
 #include <map>
+#include <vector>
 
 class ESP8266_Hardware
 {
 private:
     std::map<String, Led> leds;
 
-    void parseJsonToData(String, String, bool, Led *, void (ESP8266_Hardware::*)(String, String, void *));
-    void parseLedProperties(String, String, void *);
-    void parseColorBytes(String, String, void *);
+    void parseJsonToData(String, String, bool, void *, void (ESP8266_Hardware::*)(String &, String &, void *));
+    void parseLedProperties(String &, String &, void *);
+    void parseColorBytes(String &, String &, void *);
 
-    bool existsLed(String);
-    bool requiredLed(String);
+    bool containParams(std::vector<String> &, String &);
 
 public:
     ESP8266_Hardware();
 
+    bool existsLed(String &);
     bool initLed(String, String, bool);
-    String createLed(String);
+    bool deleteLed(String &);
 
-    Led *getLed(String);
+    const String createHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String, String, bool));
+    const String deleteHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String &));
+
+    Led *getLed(String &);
     String getLeds();
 };
 

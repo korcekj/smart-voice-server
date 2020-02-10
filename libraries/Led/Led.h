@@ -35,7 +35,7 @@ public:
     void setColorBytes(uint8_t, uint8_t, uint8_t);
     void setName(String);
 
-    String toString();
+    String toJSON();
 
 };
 

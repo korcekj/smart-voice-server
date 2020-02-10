@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "ESP8266_Hardware.h"
 #include <ESP8266WebServer.h>
+#include <vector>
 
 class ESP8266_Server 
 {
@@ -20,15 +21,23 @@ private:
     void serverInit();
     void firebaseInit();
     void hardwareInit();
-    void hardwareLedsInit(String);
+    void hardwareInitByType(String, bool (ESP8266_Hardware::*)(String, String, bool));
+
     void connect();
     void runDns();
-    void createResponseJSON(char *, int, const char *, const char *);
-    void sendResponse(int, const char *, const char *);
+
+    void createResponseJSON(char *, int, const char *, const char *, const char *);
+    void sendResponse(int, const char *, const char *, const char * = "");
+
+    bool isUserOwner(const String &, const String &);
+    bool containArgs(std::vector<String> &);
+
+    void setFirebaseRootPath();
+
     String getDashedMacAddress();
-    String setFirebaseRootPath();
 
     void handleCreateLed(String, HTTPMethod = HTTP_POST);
+    void handleDeleteLed(String, HTTPMethod = HTTP_POST);
 
 public:
     ESP8266_Server(ESP8266WebServer *);
@@ -37,14 +46,13 @@ public:
     void update();
     void handleRoot(String = "/", HTTPMethod = HTTP_GET);
     void handleNotFound();
-    void handleLed(String = "/led");
+    void handleLed();
 
     String getIpAddress();
     String getMacAddress();
     String getUrl();
     String getFirebaseError();
     ESP8266_Hardware getHardware();
-
 };
 
 #endif // ESP8266_SERVER_H

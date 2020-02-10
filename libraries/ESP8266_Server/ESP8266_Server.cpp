@@ -29,20 +29,34 @@ void ESP8266_Server::serverInit() {
 void ESP8266_Server::firebaseInit() {
     Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
     this->setFirebaseRootPath();
-    //Set database read timeout to 1 minute (max 15 minutes)
-    Firebase.setReadTimeout(firebaseData, 1000 * 60);
+
     Firebase.setString(firebaseData, this->firebaseRootPath + "/data/url", this->url);
+    Firebase.setString(firebaseData, this->firebaseRootPath + "/data/ip", this->getIpAddress());
 }
 
 void ESP8266_Server::hardwareInit() {
-    this->hardwareLedsInit(this->firebaseRootPath + "/hardware/leds");
+    this->hardwareInitByType(this->firebaseRootPath + "/hardware/led", &ESP8266_Hardware::initLed);
 }
 
-void ESP8266_Server::hardwareLedsInit(String path) {
-    int id = 1;
-    while(Firebase.getJSON(firebaseData, path + "/led" + String(id)))
-        this->hardware.initLed("/led" + String(id++), firebaseData.jsonData(), true);
-    this->firebaseError = firebaseData.errorReason();
+void ESP8266_Server::hardwareInitByType(String path, bool (ESP8266_Hardware::*f)(String, String, bool)) {
+    if (Firebase.getShallowData(firebaseData, path)) {
+        if (firebaseData.dataType() != "json") return;
+
+        FirebaseJson json;
+        size_t count = 0;
+        String key, value;
+
+        json.setJsonData(firebaseData.jsonData());
+        count = json.parse().getJsonObjectIteratorCount();
+
+        for (size_t i = 0; i < count; i++)
+        {
+            json.jsonObjectiterator(i, key, value);
+
+            if (value == "true" && Firebase.getJSON(firebaseData, path + "/" + key))
+                (this->hardware.*f)(key, firebaseData.jsonData(), true);
+        }   
+    }
 }
 
 void ESP8266_Server::connect() {
@@ -62,7 +76,7 @@ void ESP8266_Server::runDns() {
         this->url = dns;
     } else {
         this->dnsRunning = false;
-        this->url = this->getMacAddress();
+        this->url = this->getIpAddress();
     }
 }
 
@@ -83,47 +97,101 @@ void ESP8266_Server::handleNotFound() {
     });
 }
 
-void ESP8266_Server::handleLed(String url) {
-    this->handleCreateLed(url, HTTP_POST);
+void ESP8266_Server::handleLed() {
+    this->handleCreateLed("/led/create", HTTP_POST);
+    this->handleDeleteLed("/led/delete", HTTP_POST);
 }
 
 void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        String jsonData = this->server->arg(0);
-        String id = this->hardware.createLed(jsonData);
+        std::vector<String> requiredParams = {"name", "numLeds", "pin"};
+        String jsonData = this->server->arg("plain");
+        String id = this->hardware.createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
+        char returnValue[id.length() + 1];
 
         if (id.length()) {
-            String json = this->hardware.getLed(id)->toString();
-            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/leds/" + id, FirebaseJson().setJsonData(json)))
+            String json = this->hardware.getLed(id)->toJSON();
+            id.toCharArray(returnValue, id.length() + 1);
+
+            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
+                this->sendResponse(HTTP_OK, "success", "Operation was successfully done.", returnValue);
+            else 
+                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+        } else {
+            this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+        }
+
+        // std::vector<String> requiredArgs = {"userId", "moduleId", "plain"};
+        
+        // if (this->containArgs(requiredArgs)) {
+        //     // Request was successfully set up
+        //     if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
+        //         // User is owner of module
+        //     }
+        //     else {
+        //         // User is not owner of module
+        //     }
+        // } else {
+        //     // Request was not successfully set up
+        // }
+    });
+}
+
+void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
+    this->server->on(url, method, [=]() {
+        std::vector<String> requiredParams = {"id"};
+        String jsonData = this->server->arg("plain");
+        String id = this->hardware.deleteHardware(jsonData, requiredParams, &ESP8266_Hardware::deleteLed);
+        
+        if (id.length()) {
+            if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id))
                 this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
             else 
-                this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
         } else {
             this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
         }
     });
 }
 
-void ESP8266_Server::createResponseJSON(char *json, int status, const char *rate, const char *message) {
-    const int capacity = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(3);
+bool ESP8266_Server::isUserOwner(const String &userId, const String &moduleId) {
+    if (Firebase.getJSON(firebaseData, "/users/" + userId + "/modules/" + moduleId))
+        return true;
+    else
+        return false;
+}
+
+bool ESP8266_Server::containArgs(std::vector<String> &requiredArgs) {
+    for (auto &requiredArg : requiredArgs)
+    {
+        if (!this->server->hasArg(requiredArg)) return false;
+    }
+    
+    return true;
+}
+
+void ESP8266_Server::createResponseJSON(char *json, int status, const char *rate, const char *message, const char *returnValue) {
+    const int capacity = JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3);
     StaticJsonDocument<capacity> doc;
 
     doc["status"] = status;
+    if (returnValue && returnValue != "")
+        doc["returnValue"] = returnValue;
     JsonObject description = doc.createNestedObject("description");
     description["rate"] = rate;
     description["message"] = message;
     serializeJson(doc, json, JSON_BUFF_SIZE);
 }
 
-void ESP8266_Server::sendResponse(int status, const char *rate, const char *message) {
+void ESP8266_Server::sendResponse(int status, const char *rate, const char *message, const char *returnValue) {
     char json[JSON_BUFF_SIZE];
-    this->createResponseJSON(json, status, rate, message);
+    this->createResponseJSON(json, status, rate, message, returnValue);
 
     this->server->send(status, "text/json", json);
 }
 
-String ESP8266_Server::setFirebaseRootPath() {
-    this->firebaseRootPath += "/" + this->getDashedMacAddress();
+void ESP8266_Server::setFirebaseRootPath() {
+    this->firebaseRootPath = "/modules/" + this->getDashedMacAddress();
 }
 
 String ESP8266_Server::getIpAddress() {
@@ -147,6 +215,7 @@ String ESP8266_Server::getUrl() {
 String ESP8266_Server::getFirebaseError() {
     return this->firebaseError;
 }
+
 
 ESP8266_Hardware ESP8266_Server::getHardware() {
     return this->hardware;
