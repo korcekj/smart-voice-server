@@ -13,6 +13,7 @@ bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
         return true;
     } else if (this->existsLed(id)) {
         Led *led = this->getLed(id);
+        led->clearColors();
         this->parseJsonToData(jsonData, "led", false, led, &ESP8266_Hardware::parseLedProperties);
         return true;
     }
@@ -21,6 +22,8 @@ bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
 }
 
 bool ESP8266_Hardware::containParams(std::vector<String> &requiredParams, String &jsonData) {
+    if (requiredParams.empty()) return true;
+
     FirebaseJson json;
     json.setJsonData(jsonData);
 
@@ -43,16 +46,16 @@ const String ESP8266_Hardware::createHardware(String &jsonData, std::vector<Stri
     return success ? id : "";
 }
 
-const String ESP8266_Hardware::deleteHardware(String &jsonData, std::vector<String> &requiredParams, bool (ESP8266_Hardware::*f)(String &)) {
-    if (!this->containParams(requiredParams, jsonData)) return "";
+const bool ESP8266_Hardware::updateHardware(String &id, String &jsonData, bool (ESP8266_Hardware::*f)(String, String, bool)) {
+    if (!id.length() || !jsonData.length()) return false;
 
-    FirebaseJson json;
-    json.setJsonData(jsonData);
-    String id = json.parse().get("id").parseResult().stringValue;
+    return (this->*f)(id, jsonData, false);
+}
 
-    bool success = (this->*f)(id);
+const bool ESP8266_Hardware::deleteHardware(String &id, bool (ESP8266_Hardware::*f)(String &)) {
+    if (!id.length()) return false;
 
-    return success ? id : "";
+    return (this->*f)(id);
 }
 
 void ESP8266_Hardware::parseJsonToData(String jsonData, String dataName, bool isEqual, void *hardware, void (ESP8266_Hardware::*f)(String &, String &, void *)) {

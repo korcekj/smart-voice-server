@@ -18,6 +18,10 @@ void Led::init() {
     this->clear();
 }
 
+void Led::clearColors() {
+    this->colors.clear();
+}
+
 void Led::setEsp8266Pin(uint8_t pin){
     if (pin < MIN_ESP8266_PIN || pin > MAX_ESP8266_PIN)
         return;
@@ -78,7 +82,7 @@ String Led::toJSON() {
     result += "\"numLeds\":" + String(this->numLedsOnStrip) + ",";
     result += "\"colors\":{";
 
-    for(std::vector<int>::size_type i = 0; i != this->colors.size(); i++) {
+    for(int i = 0; i < this->colors.size(); i++) {
         result += "\"color" + String(id++) + "\":{";
         int counter = 0;
         for (auto &byte : this->colors[i])

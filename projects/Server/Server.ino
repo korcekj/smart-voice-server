@@ -26,9 +26,6 @@ void setup(void) {
   server.handleRoot();
   server.handleLed();
   server.handleNotFound();
-
-  // STRIP BEGIN
-  strip.init();
 }
 
 void loop(void) {

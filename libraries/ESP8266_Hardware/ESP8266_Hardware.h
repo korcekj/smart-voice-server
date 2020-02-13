@@ -25,7 +25,8 @@ public:
     bool deleteLed(String &);
 
     const String createHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String, String, bool));
-    const String deleteHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String &));
+    const bool updateHardware(String &, String &, bool (ESP8266_Hardware::*)(String, String, bool));
+    const bool deleteHardware(String &, bool (ESP8266_Hardware::*)(String &));
 
     Led *getLed(String &);
     String getLeds();

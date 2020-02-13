@@ -37,6 +37,7 @@ private:
     String getDashedMacAddress();
 
     void handleCreateLed(String, HTTPMethod = HTTP_POST);
+    void handleUpdateLed(String, HTTPMethod = HTTP_POST);
     void handleDeleteLed(String, HTTPMethod = HTTP_POST);
 
 public:

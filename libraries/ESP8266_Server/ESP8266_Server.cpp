@@ -99,6 +99,7 @@ void ESP8266_Server::handleNotFound() {
 
 void ESP8266_Server::handleLed() {
     this->handleCreateLed("/led/create", HTTP_POST);
+    this->handleUpdateLed("/led/update", HTTP_POST);
     this->handleDeleteLed("/led/delete", HTTP_POST);
 }
 
@@ -107,10 +108,11 @@ void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
         std::vector<String> requiredParams = {"name", "numLeds", "pin"};
         String jsonData = this->server->arg("plain");
         String id = this->hardware.createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
-        char returnValue[id.length() + 1];
 
         if (id.length()) {
             String json = this->hardware.getLed(id)->toJSON();
+
+            char returnValue[id.length() + 1];
             id.toCharArray(returnValue, id.length() + 1);
 
             if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
@@ -137,13 +139,31 @@ void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
     });
 }
 
+void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
+    this->server->on(url, method, [=]() {
+        String id = this->server->arg("id");
+        String jsonData = this->server->arg("plain");
+        bool updated = this->hardware.updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
+        
+        if (updated) {
+            String json = this->hardware.getLed(id)->toJSON();
+            
+            if (Firebase.updateNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
+                this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
+            else 
+                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+        } else {
+            this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+        }
+    });
+}
+
 void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        std::vector<String> requiredParams = {"id"};
-        String jsonData = this->server->arg("plain");
-        String id = this->hardware.deleteHardware(jsonData, requiredParams, &ESP8266_Hardware::deleteLed);
+        String id = this->server->arg("id");
+        bool deleted = this->hardware.deleteHardware(id, &ESP8266_Hardware::deleteLed);
         
-        if (id.length()) {
+        if (deleted) {
             if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id))
                 this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
             else 
