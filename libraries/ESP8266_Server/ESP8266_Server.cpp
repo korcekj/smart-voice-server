@@ -7,9 +7,9 @@
 // Firebase data
 FirebaseData firebaseData;
 
-ESP8266_Server::ESP8266_Server(ESP8266WebServer *server) {
+ESP8266_Server::ESP8266_Server(ESP8266WebServer *server, ESP8266_Hardware *hardware) {
     this->server = server;
-    this->hardware = ESP8266_Hardware();
+    this->hardware = hardware;
 }
 
 void ESP8266_Server::init() {
@@ -54,7 +54,7 @@ void ESP8266_Server::hardwareInitByType(String path, bool (ESP8266_Hardware::*f)
             json.jsonObjectiterator(i, key, value);
 
             if (value == "true" && Firebase.getJSON(firebaseData, path + "/" + key))
-                (this->hardware.*f)(key, firebaseData.jsonData(), true);
+                (this->hardware->*f)(key, firebaseData.jsonData(), true);
         }   
     }
 }
@@ -107,10 +107,10 @@ void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
         std::vector<String> requiredParams = {"name", "numLeds", "pin"};
         String jsonData = this->server->arg("plain");
-        String id = this->hardware.createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
+        String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
 
         if (id.length()) {
-            String json = this->hardware.getLed(id)->toJSON();
+            String json = this->hardware->getLed(id)->toJSON();
 
             char returnValue[id.length() + 1];
             id.toCharArray(returnValue, id.length() + 1);
@@ -143,10 +143,10 @@ void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
         String id = this->server->arg("id");
         String jsonData = this->server->arg("plain");
-        bool updated = this->hardware.updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
+        bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
         
         if (updated) {
-            String json = this->hardware.getLed(id)->toJSON();
+            String json = this->hardware->getLed(id)->toJSON();
             
             if (Firebase.updateNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
                 this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
@@ -161,7 +161,7 @@ void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
 void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
         String id = this->server->arg("id");
-        bool deleted = this->hardware.deleteHardware(id, &ESP8266_Hardware::deleteLed);
+        bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteLed);
         
         if (deleted) {
             if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id))
@@ -234,9 +234,4 @@ String ESP8266_Server::getUrl() {
 
 String ESP8266_Server::getFirebaseError() {
     return this->firebaseError;
-}
-
-
-ESP8266_Hardware ESP8266_Server::getHardware() {
-    return this->hardware;
 }

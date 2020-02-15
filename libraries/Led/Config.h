@@ -6,7 +6,7 @@
 // ESP8266 GIO PIN
 #define MIN_ESP8266_PIN 0
 #define MAX_ESP8266_PIN 16
-#define DEFAULT_ESP8266_PIN 2
+#define DEFAULT_ESP8266_PIN 0
 
 // Number of leds
 #define MIN_NUM_OF_LEDS 1

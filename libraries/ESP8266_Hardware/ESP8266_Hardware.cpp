@@ -5,10 +5,34 @@
 
 ESP8266_Hardware::ESP8266_Hardware() {}
 
+void ESP8266_Hardware::addStrip(Adafruit_NeoPixel *strip) {
+    this->strips.push_back(strip);
+}
+
+Adafruit_NeoPixel *ESP8266_Hardware::getStrip(uint8_t pin) {
+    try
+    {
+        if (pin > 5) pin -= 6;
+        return this->strips.at(pin);
+    }
+    catch(...)
+    {
+        return nullptr;
+    }
+}
+
+void ESP8266_Hardware::runHardware() {
+    for (auto &pair : this->leds)
+    {
+        pair.second.run();
+    }
+}
+
 bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
     if (create && !this->existsLed(id)) {
         Led led = Led();
         this->parseJsonToData(jsonData, "led", false, &led, &ESP8266_Hardware::parseLedProperties);
+        led.init(this->getStrip(led.getEsp8266Pin()));
         this->leds.insert(std::pair<String, Led>(id, led));
         return true;
     } else if (this->existsLed(id)) {
@@ -141,9 +165,9 @@ bool ESP8266_Hardware::existsLed(String &id) {
 String ESP8266_Hardware::getLeds() {
     String result = "";
 
-    for (auto &led : this->leds)
+    for (auto &pair : this->leds)
     {
-        result += led.second.toJSON() + "\n";
+        result += pair.second.toJSON() + "\n";
     }
 
     return result;

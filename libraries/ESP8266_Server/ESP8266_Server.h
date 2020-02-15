@@ -10,7 +10,7 @@ class ESP8266_Server
 {
 private:
     ESP8266WebServer *server;
-    ESP8266_Hardware hardware;
+    ESP8266_Hardware *hardware;
     IPAddress ip;
     String mac;
     String url;
@@ -41,7 +41,7 @@ private:
     void handleDeleteLed(String, HTTPMethod = HTTP_POST);
 
 public:
-    ESP8266_Server(ESP8266WebServer *);
+    ESP8266_Server(ESP8266WebServer *, ESP8266_Hardware *);
 
     void init();
     void update();
@@ -53,7 +53,6 @@ public:
     String getMacAddress();
     String getUrl();
     String getFirebaseError();
-    ESP8266_Hardware getHardware();
 };
 
 #endif // ESP8266_SERVER_H

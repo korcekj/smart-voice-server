@@ -8,18 +8,37 @@ Led::Led(uint16_t numLeds, uint8_t pin) {
 }
 
 void Led::clear() {
-    this->strip.clear();
-    this->strip.show();
+    this->strip->clear();
+    this->strip->show();
 }
 
-void Led::init() {
-    this->strip = Adafruit_NeoPixel(this->numLedsOnStrip, this->esp8266Pin, NEO_GRB + NEO_KHZ800);
-    this->strip.begin();
+void Led::init(Adafruit_NeoPixel *strip) {
+    if (strip == nullptr) return;
+
+    this->strip = strip;
+    this->strip->updateType(NEO_GRB + NEO_KHZ800);
+    this->strip->updateLength(this->numLedsOnStrip);
+    this->strip->setPin(this->esp8266Pin);
+    this->strip->begin();
     this->clear();
+}
+
+void Led::run() {
+    if (this->strip == nullptr) return;
+
+    if (this->statusOfStrip == L_OFF) this->clear();
+    else {
+        for(uint16_t i = 0; i < strip->numPixels(); i++) {
+            strip->setPixelColor(i, strip->Color(0, 0, 255));
+            strip->show();
+            delay(this->waitTime);
+        }
+    }
 }
 
 void Led::clearColors() {
     this->colors.clear();
+    this->colors = {{ {"r", 255}, {"g", 255}, {"b", 255} }};
 }
 
 void Led::setEsp8266Pin(uint8_t pin){
@@ -67,6 +86,10 @@ void Led::setColorBytes(uint8_t r, uint8_t g, uint8_t b) {
 
 void Led::setName(String name){
     this->name = name;
+}
+
+uint8_t Led::getEsp8266Pin() {
+    return this->esp8266Pin;
 }
 
 String Led::toJSON() {

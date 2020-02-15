@@ -2,6 +2,7 @@
 #define ESP8266_Hardware_H
 
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
 #include "Led.h"
 #include <map>
 #include <vector>
@@ -9,6 +10,7 @@
 class ESP8266_Hardware
 {
 private:
+    std::vector<Adafruit_NeoPixel *> strips;
     std::map<String, Led> leds;
 
     void parseJsonToData(String, String, bool, void *, void (ESP8266_Hardware::*)(String &, String &, void *));
@@ -20,6 +22,9 @@ private:
 public:
     ESP8266_Hardware();
 
+    void addStrip(Adafruit_NeoPixel *);
+    Adafruit_NeoPixel *getStrip(uint8_t);
+
     bool existsLed(String &);
     bool initLed(String, String, bool);
     bool deleteLed(String &);
@@ -27,6 +32,7 @@ public:
     const String createHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String, String, bool));
     const bool updateHardware(String &, String &, bool (ESP8266_Hardware::*)(String, String, bool));
     const bool deleteHardware(String &, bool (ESP8266_Hardware::*)(String &));
+    void runHardware();
 
     Led *getLed(String &);
     String getLeds();
