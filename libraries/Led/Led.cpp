@@ -38,7 +38,6 @@ void Led::run() {
 
 void Led::clearColors() {
     this->colors.clear();
-    this->colors = {{ {"r", 255}, {"g", 255}, {"b", 255} }};
 }
 
 void Led::setEsp8266Pin(uint8_t pin){
@@ -76,11 +75,12 @@ void Led::setBrightnessOfStrip(uint8_t brightness){
     this->brightnessOfStrip = brightness;
 }
 
-void Led::setColorBytes(uint8_t r, uint8_t g, uint8_t b) {
+void Led::setColorBytes(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     std::map<String, uint8_t> color;
     color.insert(std::pair<String, uint8_t>("r", r));
     color.insert(std::pair<String, uint8_t>("g", g));
     color.insert(std::pair<String, uint8_t>("b", b));
+    color.insert(std::pair<String, uint8_t>("a", a));
     this->colors.push_back(color);
 }
 
@@ -93,7 +93,6 @@ uint8_t Led::getEsp8266Pin() {
 }
 
 String Led::toJSON() {
-    uint8_t id = 1;
     String result = "{";
 
     result += "\"name\":\"" + this->name + "\",";
@@ -106,12 +105,16 @@ String Led::toJSON() {
     result += "\"colors\":{";
 
     for(int i = 0; i < this->colors.size(); i++) {
-        result += "\"color" + String(id++) + "\":{";
+        result += "\"color" + String(i) + "\":{";
         int counter = 0;
         for (auto &byte : this->colors[i])
         {
-            result += "\"" + byte.first + "\":" + String(byte.second);
-            if (++counter < 3) result += ",";
+            result += "\"" + byte.first + "\":";
+
+            if (byte.first == "a") result += String((double)byte.second / 100);
+            else result += String(byte.second);
+
+            if (++counter < 4) result += ",";
         }
         result += "}";
         if (i < this->colors.size() - 1) result += ",";

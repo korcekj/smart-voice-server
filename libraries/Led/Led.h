@@ -17,7 +17,7 @@ private:
     int activeMode = MODE_ZERO;
     uint8_t waitTime = MIN_MS;
     uint8_t brightnessOfStrip = MAX_BRIGHTNESS;
-    std::vector<std::map<String, uint8_t>> colors = {{ {"r", 255}, {"g", 255}, {"b", 255} }};
+    std::vector<std::map<String, uint8_t>> colors = {{ {"r", 255}, {"g", 255}, {"b", 255}, {"a", 100} }};
     String name = "";
 
     void clear();
@@ -36,7 +36,7 @@ public:
     void setActiveMode(int);
     void setWaitTime(uint8_t);
     void setBrightnessOfStrip(uint8_t);
-    void setColorBytes(uint8_t, uint8_t, uint8_t);
+    void setColorBytes(uint8_t, uint8_t, uint8_t, uint8_t);
     void setName(String);
 
     uint8_t getEsp8266Pin();
