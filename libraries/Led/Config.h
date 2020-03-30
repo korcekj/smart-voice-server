@@ -17,7 +17,7 @@
 
 // Wait time
 #define MIN_MS 0
-#define MAX_MS 255
+#define MAX_MS 1000
 
 // Status of led
 #define L_ON 1

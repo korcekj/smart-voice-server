@@ -8,8 +8,11 @@ Led::Led(uint16_t numLeds, uint8_t pin) {
 }
 
 void Led::clear() {
+    if (this->strip == nullptr) return;
+
     this->strip->clear();
     this->strip->show();
+    this->currentIndex = 0;
 }
 
 void Led::init(Adafruit_NeoPixel *strip) {
@@ -25,15 +28,67 @@ void Led::init(Adafruit_NeoPixel *strip) {
 
 void Led::run() {
     if (this->strip == nullptr) return;
-
-    if (this->statusOfStrip == L_OFF) this->clear();
-    else {
-        for(uint16_t i = 0; i < strip->numPixels(); i++) {
-            strip->setPixelColor(i, strip->Color(0, 0, 255));
-            strip->show();
-            delay(this->waitTime);
-        }
+    else if (this->statusOfStrip == L_OFF) {
+        this->clear();
+        return;
     }
+
+    (this->*this->modeFunctions[this->activeMode])();
+}
+
+void Led::mode0() {
+    std::map<String, uint8_t> color = this->getColorBytes(0);
+    for(uint16_t i = 0; i < this->strip->numPixels(); i++) {
+        this->strip->setPixelColor(i, this->strip->Color(color["r"], color["g"], color["b"], color["a"])); 
+        this->strip->setBrightness(this->brightnessOfStrip);
+        this->strip->show();
+    }
+}
+
+void Led::mode1() {
+    if (millis() >= this->timeNow + this->waitTime) {
+        if (this->currentIndex >= this->strip->numPixels() + 3) this->clear();
+
+        std::map<String, uint8_t> color = this->getColorBytes(this->currentIndex % 3);
+        strip->setPixelColor(this->currentIndex, this->strip->Color(color["r"], color["g"], color["b"], color["a"]));
+        strip->setPixelColor(this->currentIndex - 3, 0); 
+        this->strip->setBrightness(this->brightnessOfStrip);
+        this->strip->show();
+
+        this->currentIndex++;
+        this->timeNow += this->waitTime;
+    }
+}
+
+void Led::mode2() {
+    if (millis() >= this->timeNow + this->waitTime) {
+        if (this->currentIndex >= 256) this->currentIndex = 0;
+
+        for(uint16_t i = 0; i < this->strip->numPixels(); i++) {
+            this->strip->setPixelColor(i, this->wheel((i + this->currentIndex) & 255));
+        }
+
+        this->strip->setBrightness(this->brightnessOfStrip);
+        this->strip->show();
+        
+        this->currentIndex++;
+        this->timeNow += this->waitTime;
+    }
+}
+
+uint32_t Led::wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip->Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip->Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+
+  WheelPos -= 170;
+  return strip->Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
 void Led::clearColors() {
@@ -46,9 +101,14 @@ void Led::setEsp8266Pin(uint8_t pin){
     this->esp8266Pin = pin;
 }
 
-void Led::setStatusOfStrip(int status){
-    if (status == L_OFF || status == L_ON) 
-        this->statusOfStrip = status;
+void Led::setStatusOfStrip(uint8_t status){
+    if (status == L_OFF) {
+        this->statusOfStrip = L_OFF;
+    } else if (status == L_ON) {
+        this->clear();
+        this->timeNow = millis();
+        this->statusOfStrip = L_ON;
+    }
 }
 
 void Led::setNumLedsOnStrip(uint16_t numLeds){
@@ -57,13 +117,19 @@ void Led::setNumLedsOnStrip(uint16_t numLeds){
     this->numLedsOnStrip = numLeds;
 }
 
-void Led::setActiveMode(int mode){
+void Led::setActiveMode(uint8_t mode){
     if (mode != MODE_ZERO && mode != MODE_ONE && mode != MODE_TWO)
         return;
+
+    if (this->activeMode != mode) {
+        this->clear();
+        this->timeNow = millis();
+    }
+
     this->activeMode = mode;
 }
 
-void Led::setWaitTime(uint8_t ms){
+void Led::setWaitTime(int ms){
     if (ms < MIN_MS || ms > MAX_MS)
         return;
     this->waitTime = ms;
@@ -90,6 +156,14 @@ void Led::setName(String name){
 
 uint8_t Led::getEsp8266Pin() {
     return this->esp8266Pin;
+}
+
+std::map<String, uint8_t> Led::getColorBytes(uint8_t index) {
+    if (index < this->colors.size()) {
+        return this->colors[index];
+    }
+
+    return this->colors[0];
 }
 
 String Led::toJSON() {
