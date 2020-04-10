@@ -105,53 +105,65 @@ void ESP8266_Server::handleLed() {
 
 void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        std::vector<String> requiredParams = {"name", "numLeds", "pin"};
-        String jsonData = this->server->arg("plain");
-        String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
+        std::vector<String> requiredArgs = {"userId", "moduleId", "plain"};
+        
+        if (this->containArgs(requiredArgs)) {
+            if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
+                
+                std::vector<String> requiredParams = {"name", "numLeds", "pin"};
+                String jsonData = this->server->arg("plain");
+                String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
 
-        if (id.length()) {
-            String json = this->hardware->getLed(id)->toJSON();
+                if (id.length()) {
+                    String json = this->hardware->getLed(id)->toJSON();
 
-            char returnValue[id.length() + 1];
-            id.toCharArray(returnValue, id.length() + 1);
+                    // Return created id back to the client
+                    char returnValue[id.length() + 1];
+                    id.toCharArray(returnValue, id.length() + 1);
 
-            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
-                this->sendResponse(HTTP_OK, "success", "Operation was successfully done.", returnValue);
-            else 
-                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+                    if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
+                        this->sendResponse(HTTP_CREATED_OK, "success", "Operation was successfully done.", returnValue);
+                    else 
+                        this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+                } else {
+                    this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+                }
+
+            }
+            else {
+                this->sendResponse(HTTP_NOT_AUTHORIZED, "error", "Operation was not authorized.");
+            }
         } else {
             this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
         }
-
-        // std::vector<String> requiredArgs = {"userId", "moduleId", "plain"};
-        
-        // if (this->containArgs(requiredArgs)) {
-        //     // Request was successfully set up
-        //     if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
-        //         // User is owner of module
-        //     }
-        //     else {
-        //         // User is not owner of module
-        //     }
-        // } else {
-        //     // Request was not successfully set up
-        // }
     });
 }
 
 void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        String id = this->server->arg("id");
-        String jsonData = this->server->arg("plain");
-        bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
+        std::vector<String> requiredArgs = {"id", "userId", "moduleId", "plain"};
         
-        if (updated) {
-            String json = this->hardware->getLed(id)->toJSON();
-            
-            if (Firebase.updateNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
-                this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
-            else 
-                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+        if (this->containArgs(requiredArgs)) {
+            if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
+
+                String id = this->server->arg("id");
+                String jsonData = this->server->arg("plain");
+                bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
+                
+                if (updated) {
+                    String json = this->hardware->getLed(id)->toJSON();
+                    
+                    if (Firebase.updateNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
+                        this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
+                    else 
+                        this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+                } else {
+                    this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+                }
+
+            } else {
+                this->sendResponse(HTTP_NOT_AUTHORIZED, "error", "Operation was not authorized.");
+            }
         } else {
             this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
         }
@@ -160,14 +172,26 @@ void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
 
 void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        String id = this->server->arg("id");
-        bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteLed);
+        std::vector<String> requiredArgs = {"id", "userId", "moduleId"};
         
-        if (deleted) {
-            if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id))
-                this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
-            else 
-                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+        if (this->containArgs(requiredArgs)) {
+            if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
+
+                String id = this->server->arg("id");
+                bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteLed);
+                
+                if (deleted) {
+                    if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id))
+                        this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
+                    else 
+                        this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+                } else {
+                    this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+                }
+
+            } else {
+                this->sendResponse(HTTP_NOT_AUTHORIZED, "error", "Operation was not authorized.");
+            }
         } else {
             this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
         }
