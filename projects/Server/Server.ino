@@ -25,6 +25,20 @@ std::vector<Adafruit_NeoPixel> ledStrips{
   Adafruit_NeoPixel() 
 }; 
 
+std::vector<IRsend> irSends{ 
+  IRsend(0), 
+  IRsend(1),
+  IRsend(2), 
+  IRsend(3), 
+  IRsend(4), 
+  IRsend(5), 
+  IRsend(12), 
+  IRsend(13), 
+  IRsend(14), 
+  IRsend(15), 
+  IRsend(16) 
+}; 
+
 const int led = 13;
 
 // SETUP
@@ -35,6 +49,7 @@ void setup(void) {
 
   // HARDWARE INIT
   createStrips();
+  createIRsends();
 
   // SERVER INIT
   server.init();
@@ -46,11 +61,14 @@ void setup(void) {
   Serial.println(server.getMacAddress());
   Serial.print("URL: ");
   Serial.println(server.getUrl());
-  Serial.print("LEDS: ");
+  Serial.print("LED: ");
   Serial.println(hardware.getLeds());
+  Serial.print("REMOTE: ");
+  Serial.println(hardware.getRemotes());
   
   server.handleRoot();
   server.handleLed();
+  server.handleRemote();
   server.handleNotFound();
 }
 
@@ -60,10 +78,18 @@ void loop(void) {
   hardware.runHardware();
 }
 
-// Create num strips for hardware vecotr memory
+// Create strips for hardware library and manage them in memory
 void createStrips() {
     for (auto &ledStrip : ledStrips)
     {
         hardware.addStrip(&ledStrip);
+    }
+}
+
+// Create IRsend for hardware library and manage them in memory
+void createIRsends() {
+    for (auto &irSend : irSends)
+    {
+        hardware.addIRsend(&irSend);
     }
 }

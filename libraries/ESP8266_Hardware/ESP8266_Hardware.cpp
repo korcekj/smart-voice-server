@@ -21,6 +21,22 @@ Adafruit_NeoPixel *ESP8266_Hardware::getStrip(uint8_t pin) {
     }
 }
 
+void ESP8266_Hardware::addIRsend(IRsend *irSend) {
+    this->irSends.push_back(irSend);
+}
+
+IRsend *ESP8266_Hardware::getIRsend(uint8_t pin) {
+    try
+    {
+        if (pin > 5) pin -= 6;
+        return this->irSends.at(pin);
+    }
+    catch(...)
+    {
+        return nullptr;
+    }
+}
+
 void ESP8266_Hardware::runHardware() {
     for (auto &pair : this->leds)
     {
@@ -38,6 +54,22 @@ bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
     } else if (this->existsLed(id)) {
         Led *led = this->getLed(id);
         this->parseJsonToData(jsonData, "led", false, led, &ESP8266_Hardware::parseLedProperties);
+        return true;
+    }
+
+    return false;
+}
+
+bool ESP8266_Hardware::initRemote(String id, String jsonData, bool create) {
+    if (create && !this->existsRemote(id)) {
+        Remote remote = Remote();
+        this->parseJsonToData(jsonData, "remote", false, &remote, &ESP8266_Hardware::parseRemoteProperties);
+        remote.init(this->getIRsend(remote.getEsp8266Pin()));
+        this->remotes.insert(std::pair<String, Remote>(id, remote));
+        return true;
+    } else if (this->existsRemote(id)) {
+        Remote *remote = this->getRemote(id);
+        this->parseJsonToData(jsonData, "remote", false, remote, &ESP8266_Hardware::parseRemoteProperties);
         return true;
     }
 
@@ -127,6 +159,18 @@ void ESP8266_Hardware::parseLedProperties(String &key, String &value, void *l) {
     }
 }
 
+void ESP8266_Hardware::parseRemoteProperties(String &key, String &value, void *r) {
+    Remote *remote = (Remote*)r;
+    if (key == R_PIN)
+        remote->setEsp8266Pin(value.toInt());
+    else if (key == R_NAME)
+        remote->setName(value);
+    else if (key == R_TYPE)
+        remote->setType(value.toInt());
+    else if (key == R_FREQUENCY)
+        remote->setFrequency(value.toInt());
+}
+
 void ESP8266_Hardware::parseColorBytes(String &id, String &jsonData, void *l) {
     Led *led = (Led*)l;
     FirebaseJson json;
@@ -163,8 +207,24 @@ Led *ESP8266_Hardware::getLed(String &id) {
     return &it->second;
 }
 
+Remote *ESP8266_Hardware::getRemote(String &id) {
+    std::map<String, Remote>::iterator it;
+    it = this->remotes.find(id);
+
+    if (it == this->remotes.end())
+        return nullptr;
+
+    return &it->second;
+}
+
 bool ESP8266_Hardware::existsLed(String &id) {
     if (this->getLed(id) == nullptr)
+        return false;
+    return true;
+}
+
+bool ESP8266_Hardware::existsRemote(String &id) {
+    if (this->getRemote(id) == nullptr)
         return false;
     return true;
 }
@@ -173,6 +233,17 @@ String ESP8266_Hardware::getLeds() {
     String result = "";
 
     for (auto &pair : this->leds)
+    {
+        result += pair.second.toJSON() + "\n";
+    }
+
+    return result;
+}
+
+String ESP8266_Hardware::getRemotes() {
+    String result = "";
+
+    for (auto &pair : this->remotes)
     {
         result += pair.second.toJSON() + "\n";
     }

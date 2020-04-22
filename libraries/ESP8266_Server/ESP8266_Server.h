@@ -36,9 +36,15 @@ private:
 
     String getDashedMacAddress();
 
+    // LED
     void handleCreateLed(String, HTTPMethod = HTTP_POST);
     void handleUpdateLed(String, HTTPMethod = HTTP_POST);
     void handleDeleteLed(String, HTTPMethod = HTTP_POST);
+
+    // REMOTE
+    void handleCreateRemote(String, HTTPMethod = HTTP_POST);
+    void handleUpdateRemote(String, HTTPMethod = HTTP_POST);
+    void handleDeleteRemote(String, HTTPMethod = HTTP_POST);
 
 public:
     ESP8266_Server(ESP8266WebServer *, ESP8266_Hardware *);
@@ -48,6 +54,7 @@ public:
     void handleRoot(String = "/", HTTPMethod = HTTP_GET);
     void handleNotFound();
     void handleLed();
+    void handleRemote();
 
     String getIpAddress();
     String getMacAddress();

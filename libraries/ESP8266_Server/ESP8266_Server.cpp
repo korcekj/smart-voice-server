@@ -36,6 +36,7 @@ void ESP8266_Server::firebaseInit() {
 
 void ESP8266_Server::hardwareInit() {
     this->hardwareInitByType(this->firebaseRootPath + "/hardware/led", &ESP8266_Hardware::initLed);
+    this->hardwareInitByType(this->firebaseRootPath + "/hardware/remote", &ESP8266_Hardware::initRemote);
 }
 
 void ESP8266_Server::hardwareInitByType(String path, bool (ESP8266_Hardware::*f)(String, String, bool)) {
@@ -101,6 +102,12 @@ void ESP8266_Server::handleLed() {
     this->handleCreateLed("/led/create", HTTP_POST);
     this->handleUpdateLed("/led/update", HTTP_POST);
     this->handleDeleteLed("/led/delete", HTTP_POST);
+}
+
+void ESP8266_Server::handleRemote() {
+    this->handleCreateRemote("/remote/create", HTTP_POST);
+    this->handleUpdateRemote("/remote/update", HTTP_POST);
+    this->handleDeleteRemote("/remote/delete", HTTP_POST);
 }
 
 void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
@@ -196,6 +203,37 @@ void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
             this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
         }
     });
+}
+
+void ESP8266_Server::handleCreateRemote(String url, HTTPMethod method) {
+    this->server->on(url, method, [=]() {
+        std::vector<String> requiredParams = {"pin", "name", "type", "frequency"};
+        String jsonData = this->server->arg("plain");
+        String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initRemote);
+
+        if (id.length()) {
+            String json = this->hardware->getRemote(id)->toJSON();
+
+            // Return created id back to the client
+            char returnValue[id.length() + 1];
+            id.toCharArray(returnValue, id.length() + 1);
+
+            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/remote/" + id, FirebaseJson().setJsonData(json)))
+                this->sendResponse(HTTP_CREATED_OK, "success", "Operation was successfully done.", returnValue);
+            else 
+                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+        } else {
+            this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+        }
+    });
+}
+
+void ESP8266_Server::handleUpdateRemote(String url, HTTPMethod method) {
+
+}
+
+void ESP8266_Server::handleDeleteRemote(String url, HTTPMethod method) {
+
 }
 
 bool ESP8266_Server::isUserOwner(const String &userId, const String &moduleId) {
