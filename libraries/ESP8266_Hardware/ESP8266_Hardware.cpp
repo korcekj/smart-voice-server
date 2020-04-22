@@ -42,6 +42,11 @@ void ESP8266_Hardware::runHardware() {
     {
         pair.second.run();
     }
+
+    for (auto &pair : this->remotes)
+    {
+        pair.second.run();
+    }
 }
 
 bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
@@ -169,6 +174,8 @@ void ESP8266_Hardware::parseRemoteProperties(String &key, String &value, void *r
         remote->setType(value.toInt());
     else if (key == R_FREQUENCY)
         remote->setFrequency(value.toInt());
+    else if (key == R_DATA)
+        remote->setData(value.toInt());
 }
 
 void ESP8266_Hardware::parseColorBytes(String &id, String &jsonData, void *l) {
@@ -194,6 +201,14 @@ bool ESP8266_Hardware::deleteLed(String &id) {
         return false;
     
     this->leds.erase(id);
+    return true;
+}
+
+bool ESP8266_Hardware::deleteRemote(String &id) {
+    if (!this->existsRemote(id))
+        return false;
+    
+    this->remotes.erase(id);
     return true;
 }
 

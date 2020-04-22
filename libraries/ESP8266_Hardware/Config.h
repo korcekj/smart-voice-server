@@ -13,3 +13,4 @@
 #define R_NAME "name"
 #define R_TYPE "type"
 #define R_FREQUENCY "frequency"
+#define R_DATA "data"

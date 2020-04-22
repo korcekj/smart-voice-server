@@ -38,6 +38,7 @@ public:
 
     bool existsRemote(String &);
     bool initRemote(String, String, bool);
+    bool deleteRemote(String &);
 
     const String createHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String, String, bool));
     const bool updateHardware(String &, String &, bool (ESP8266_Hardware::*)(String, String, bool));

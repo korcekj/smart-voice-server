@@ -36,11 +36,11 @@ const uint16_t kIrLed = 2;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 
 IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
 
-// Sony (On/Off) - 0xa90
-// Sony (Volume Up) - 0x490
-// Sony (Volume Down) - 0xC90
-// Sony (Channel Up) - 0x90
-// Sony (Channel Down) - 0x890
+// Sony (On/Off) - 0xa90 - 2704
+// Sony (Volume Up) - 0x490 - 1168
+// Sony (Volume Down) - 0xC90 - 3216
+// Sony (Channel Up) - 0x90 - 144
+// Sony (Channel Down) - 0x890 - 2192
 
 void setup() {
   irsend.begin();
@@ -52,11 +52,11 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("Sony Volume Up");
-  irsend.sendSony(0x490, 12, 2);  // 12 bits & 2 repeats
+  Serial.println("Sony Volume Up: ");
+  irsend.sendSony(1168, 12, 2);  // 12 bits & 2 repeats
   delay(2000);
 
   Serial.println("Sony Volume Down");
-  irsend.sendSony(0xC90, 12, 2);  // 12 bits & 2 repeats
+  irsend.sendSony(3216, 12, 2);  // 12 bits & 2 repeats
   delay(2000);
 }
