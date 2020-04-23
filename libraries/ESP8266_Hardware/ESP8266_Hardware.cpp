@@ -160,7 +160,7 @@ void ESP8266_Hardware::parseLedProperties(String &key, String &value, void *l) {
         led->setWaitTime(value.toInt());
     else if (key == P_COLORS) {
         led->clearColors();
-        this->parseJsonToData(value, "color", true, led, &ESP8266_Hardware::parseColorBytes);
+        this->parseJsonToData(value, P_COLOR, true, led, &ESP8266_Hardware::parseColorBytes);
     }
 }
 
@@ -174,8 +174,8 @@ void ESP8266_Hardware::parseRemoteProperties(String &key, String &value, void *r
         remote->setType(value.toInt());
     else if (key == R_FREQUENCY)
         remote->setFrequency(value.toInt());
-    else if (key == R_DATA)
-        remote->setData(value.toInt());
+    else if (key == R_COMMAND)
+        remote->setCommand(value.toInt());
 }
 
 void ESP8266_Hardware::parseColorBytes(String &id, String &jsonData, void *l) {

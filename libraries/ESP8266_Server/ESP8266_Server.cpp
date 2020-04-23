@@ -207,21 +207,34 @@ void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
 
 void ESP8266_Server::handleCreateRemote(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        std::vector<String> requiredParams = {"pin", "name", "type", "frequency"};
-        String jsonData = this->server->arg("plain");
-        String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initRemote);
+        std::vector<String> requiredArgs = {"userId", "moduleId", "plain"};
+        
+        if (this->containArgs(requiredArgs)) {
+            if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
+                
+                std::vector<String> requiredParams = {"pin", "name", "type", "frequency"};
+                String jsonData = this->server->arg("plain");
+                String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initRemote);
 
-        if (id.length()) {
-            String json = this->hardware->getRemote(id)->toJSON();
+                if (id.length()) {
+                    String json = this->hardware->getRemote(id)->toJSON();
 
-            // Return created id back to the client
-            char returnValue[id.length() + 1];
-            id.toCharArray(returnValue, id.length() + 1);
+                    // Return created id back to the client
+                    char returnValue[id.length() + 1];
+                    id.toCharArray(returnValue, id.length() + 1);
 
-            if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/remote/" + id, FirebaseJson().setJsonData(json)))
-                this->sendResponse(HTTP_CREATED_OK, "success", "Operation was successfully done.", returnValue);
-            else 
-                this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+                    if (Firebase.setJSON(firebaseData, this->firebaseRootPath + "/hardware/remote/" + id, FirebaseJson().setJsonData(json)))
+                        this->sendResponse(HTTP_CREATED_OK, "success", "Operation was successfully done.", returnValue);
+                    else 
+                        this->sendResponse(HTTP_INTERNAL_SERVER_ERROR, "error", "Operation was not successfully done.");
+                } else {
+                    this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+                }
+
+            }
+            else {
+                this->sendResponse(HTTP_NOT_AUTHORIZED, "error", "Operation was not authorized.");
+            }
         } else {
             this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
         }
@@ -230,10 +243,10 @@ void ESP8266_Server::handleCreateRemote(String url, HTTPMethod method) {
 
 void ESP8266_Server::handleUpdateRemote(String url, HTTPMethod method) {
     this->server->on(url, method, [=]() {
-        // std::vector<String> requiredArgs = {"id", "userId", "moduleId", "plain"};
+        std::vector<String> requiredArgs = {"id", "userId", "moduleId", "plain"};
         
-        // if (this->containArgs(requiredArgs)) {
-        //     if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
+        if (this->containArgs(requiredArgs)) {
+            if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
 
                 String id = this->server->arg("id");
                 String jsonData = this->server->arg("plain");
@@ -245,12 +258,12 @@ void ESP8266_Server::handleUpdateRemote(String url, HTTPMethod method) {
                     this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
                 }
 
-        //     } else {
-        //         this->sendResponse(HTTP_NOT_AUTHORIZED, "error", "Operation was not authorized.");
-        //     }
-        // } else {
-        //     this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
-        // }
+            } else {
+                this->sendResponse(HTTP_NOT_AUTHORIZED, "error", "Operation was not authorized.");
+            }
+        } else {
+            this->sendResponse(HTTP_BAD_REQUEST, "error", "Operation was not successfully done.");
+        }
     });
 }
 
