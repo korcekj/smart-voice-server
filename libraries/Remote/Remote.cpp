@@ -45,7 +45,7 @@ void Remote::setFrequency(uint8_t frequency) {
     this->frequency = frequency;
 }
 
-void Remote::setCommand(uint64_t command) {
+void Remote::setCommand(uint8_t command) {
     this->command = command;
 }
 

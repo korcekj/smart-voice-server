@@ -14,7 +14,7 @@ private:
     String name = "";
     uint8_t type = SONY_REMOTE;
     uint8_t frequency = DEFAULT_REMOTE_FREQUENCY;
-    uint64_t command = -1;
+    uint8_t command = -1;
 
     std::vector<void (Remote::*)()> typeFunctions = {&Remote::Sony};
 
@@ -30,7 +30,7 @@ public:
     void setName(String);
     void setType(uint8_t);
     void setFrequency(uint8_t);
-    void setCommand(uint64_t);
+    void setCommand(uint8_t);
 
     uint8_t getEsp8266Pin();
 
