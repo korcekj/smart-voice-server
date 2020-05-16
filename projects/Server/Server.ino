@@ -61,10 +61,6 @@ void setup(void) {
   Serial.println(server.getMacAddress());
   Serial.print("URL: ");
   Serial.println(server.getUrl());
-  Serial.print("LED: ");
-  Serial.println(hardware.getLeds());
-  Serial.print("REMOTE: ");
-  Serial.println(hardware.getRemotes());
   
   server.handleRoot();
   server.handleLed();
