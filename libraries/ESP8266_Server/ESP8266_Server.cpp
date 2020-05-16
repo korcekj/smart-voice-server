@@ -4,7 +4,6 @@
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
 
-// Firebase data
 FirebaseData firebaseData;
 
 ESP8266_Server::ESP8266_Server(ESP8266WebServer *server, ESP8266_Hardware *hardware) {
@@ -122,7 +121,7 @@ void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
                 String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
 
                 if (id.length()) {
-                    String json = this->hardware->getLed(id)->toJSON();
+                    String json = this->hardware->getModule(id)->toJSON();
 
                     // Return created id back to the client
                     char returnValue[id.length() + 1];
@@ -158,7 +157,7 @@ void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
                 bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
                 
                 if (updated) {
-                    String json = this->hardware->getLed(id)->toJSON();
+                    String json = this->hardware->getModule(id)->toJSON();
                     
                     if (Firebase.updateNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id, FirebaseJson().setJsonData(json)))
                         this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");
@@ -185,7 +184,7 @@ void ESP8266_Server::handleDeleteLed(String url, HTTPMethod method) {
             if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
 
                 String id = this->server->arg("id");
-                bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteLed);
+                bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteModule);
                 
                 if (deleted) {
                     if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/led/" + id))
@@ -217,7 +216,7 @@ void ESP8266_Server::handleCreateRemote(String url, HTTPMethod method) {
                 String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initRemote);
 
                 if (id.length()) {
-                    String json = this->hardware->getRemote(id)->toJSON();
+                    String json = this->hardware->getModule(id)->toJSON();
 
                     // Return created id back to the client
                     char returnValue[id.length() + 1];
@@ -275,7 +274,7 @@ void ESP8266_Server::handleDeleteRemote(String url, HTTPMethod method) {
             if (this->isUserOwner(this->server->arg("userId"), this->server->arg("moduleId"))) {
 
                 String id = this->server->arg("id");
-                bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteRemote);
+                bool deleted = this->hardware->deleteHardware(id, &ESP8266_Hardware::deleteModule);
                 
                 if (deleted) {
                     if (Firebase.deleteNode(firebaseData, this->firebaseRootPath + "/hardware/remote/" + id))

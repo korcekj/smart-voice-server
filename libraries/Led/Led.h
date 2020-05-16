@@ -3,11 +3,12 @@
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include "ESP8266_Modul.h"
 #include "Config.h"
 #include <vector>
 #include <map>
 
-class Led {
+class Led : public ESP8266_Modul {
 private:
     Adafruit_NeoPixel *strip = nullptr;
 
@@ -34,8 +35,10 @@ public:
     Led();
     Led(uint16_t, uint8_t);
 
-    void init(Adafruit_NeoPixel *);
+    void init(void *);
     void run();
+    String toJSON();
+
     void clearColors();
 
     void setEsp8266Pin(uint8_t);
@@ -49,8 +52,6 @@ public:
 
     uint8_t getEsp8266Pin();
     std::map<String, uint8_t> getColorBytes(uint8_t);
-
-    String toJSON();
 
 };
 

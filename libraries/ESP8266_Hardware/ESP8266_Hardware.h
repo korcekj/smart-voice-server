@@ -3,19 +3,19 @@
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include "ESP8266_Modul.h"
 #include <IRsend.h>
 #include "Led.h"
 #include "Remote.h"
 #include <map>
-#include <vector>
+#include <vector> 
 
 class ESP8266_Hardware
 {
 private:
     std::vector<Adafruit_NeoPixel *> strips;
     std::vector<IRsend *> irSends;
-    std::map<String, Led> leds;
-    std::map<String, Remote> remotes;
+    std::map<String, ESP8266_Modul *> modules;
 
     void parseJsonToData(String, String, bool, void *, void (ESP8266_Hardware::*)(String &, String &, void *));
     void parseLedProperties(String &, String &, void *);
@@ -32,24 +32,17 @@ public:
     void addIRsend(IRsend *);
     IRsend *getIRsend(uint8_t);
 
-    bool existsLed(String &);
     bool initLed(String, String, bool);
-    bool deleteLed(String &);
-
-    bool existsRemote(String &);
     bool initRemote(String, String, bool);
-    bool deleteRemote(String &);
 
     const String createHardware(String &, std::vector<String> &, bool (ESP8266_Hardware::*)(String, String, bool));
     const bool updateHardware(String &, String &, bool (ESP8266_Hardware::*)(String, String, bool));
     const bool deleteHardware(String &, bool (ESP8266_Hardware::*)(String &));
     void runHardware();
 
-    Led *getLed(String &);
-    String getLeds();
-
-    Remote *getRemote(String &);
-    String getRemotes();
+    bool existsModule(String &);
+    ESP8266_Modul *getModule(String &);
+    bool deleteModule(String &);
 };
 
 #endif // ESP8266_Hardware_H

@@ -4,10 +4,10 @@ const int SONY_COMMANDS[] = {SONY_POWER, SONY_VOLUME_UP, SONY_VOLUME_DOWN, SONY_
 
 Remote::Remote() {}
 
-void Remote::init(IRsend *irSend) {
+void Remote::init(void *irSend) {
     if (irSend == nullptr) return;
 
-    this->irSend = irSend;
+    this->irSend = (IRsend *)irSend;
     this->irSend->begin();
 }
 

@@ -38,26 +38,21 @@ IRsend *ESP8266_Hardware::getIRsend(uint8_t pin) {
 }
 
 void ESP8266_Hardware::runHardware() {
-    for (auto &pair : this->leds)
+    for (auto &pair : this->modules)
     {
-        pair.second.run();
-    }
-
-    for (auto &pair : this->remotes)
-    {
-        pair.second.run();
+        pair.second->run();
     }
 }
 
 bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
-    if (create && !this->existsLed(id)) {
-        Led led = Led();
-        this->parseJsonToData(jsonData, "led", false, &led, &ESP8266_Hardware::parseLedProperties);
-        led.init(this->getStrip(led.getEsp8266Pin()));
-        this->leds.insert(std::pair<String, Led>(id, led));
+    if (create && !this->existsModule(id)) {
+        Led *led = new Led();
+        this->parseJsonToData(jsonData, "led", false, led, &ESP8266_Hardware::parseLedProperties);
+        led->init(this->getStrip(led->getEsp8266Pin()));
+        this->modules.insert(std::pair<String, Led *>(id, led));
         return true;
-    } else if (this->existsLed(id)) {
-        Led *led = this->getLed(id);
+    } else if (this->existsModule(id)) {
+        Led *led = (Led *)this->getModule(id);
         this->parseJsonToData(jsonData, "led", false, led, &ESP8266_Hardware::parseLedProperties);
         return true;
     }
@@ -66,14 +61,14 @@ bool ESP8266_Hardware::initLed(String id, String jsonData, bool create) {
 }
 
 bool ESP8266_Hardware::initRemote(String id, String jsonData, bool create) {
-    if (create && !this->existsRemote(id)) {
-        Remote remote = Remote();
-        this->parseJsonToData(jsonData, "remote", false, &remote, &ESP8266_Hardware::parseRemoteProperties);
-        remote.init(this->getIRsend(remote.getEsp8266Pin()));
-        this->remotes.insert(std::pair<String, Remote>(id, remote));
+    if (create && !this->existsModule(id)) {
+        Remote *remote = new Remote();
+        this->parseJsonToData(jsonData, "remote", false, remote, &ESP8266_Hardware::parseRemoteProperties);
+        remote->init(this->getIRsend(remote->getEsp8266Pin()));
+        this->modules.insert(std::pair<String, Remote *>(id, remote));
         return true;
-    } else if (this->existsRemote(id)) {
-        Remote *remote = this->getRemote(id);
+    } else if (this->existsModule(id)) {
+        Remote *remote = (Remote *)this->getModule(id);
         this->parseJsonToData(jsonData, "remote", false, remote, &ESP8266_Hardware::parseRemoteProperties);
         return true;
     }
@@ -196,72 +191,28 @@ void ESP8266_Hardware::parseColorBytes(String &id, String &jsonData, void *l) {
     led->setColorBytes(r, g, b, a);
 }
 
-bool ESP8266_Hardware::deleteLed(String &id) {
-    if (!this->existsLed(id))
+bool ESP8266_Hardware::deleteModule(String &id) {
+    ESP8266_Modul* module = this->getModule(id);
+    if (module == nullptr)
         return false;
     
-    this->leds.erase(id);
+    delete module;
+    this->modules.erase(id);
     return true;
 }
 
-bool ESP8266_Hardware::deleteRemote(String &id) {
-    if (!this->existsRemote(id))
-        return false;
-    
-    this->remotes.erase(id);
-    return true;
-}
+ESP8266_Modul *ESP8266_Hardware::getModule(String &id) {
+    std::map<String, ESP8266_Modul *>::iterator it;
+    it = this->modules.find(id);
 
-Led *ESP8266_Hardware::getLed(String &id) {
-    std::map<String, Led>::iterator it;
-    it = this->leds.find(id);
-
-    if (it == this->leds.end())
+    if (it == this->modules.end())
         return nullptr;
 
-    return &it->second;
+    return it->second;
 }
 
-Remote *ESP8266_Hardware::getRemote(String &id) {
-    std::map<String, Remote>::iterator it;
-    it = this->remotes.find(id);
-
-    if (it == this->remotes.end())
-        return nullptr;
-
-    return &it->second;
-}
-
-bool ESP8266_Hardware::existsLed(String &id) {
-    if (this->getLed(id) == nullptr)
+bool ESP8266_Hardware::existsModule(String &id) {
+    if (this->getModule(id) == nullptr)
         return false;
     return true;
-}
-
-bool ESP8266_Hardware::existsRemote(String &id) {
-    if (this->getRemote(id) == nullptr)
-        return false;
-    return true;
-}
-
-String ESP8266_Hardware::getLeds() {
-    String result = "";
-
-    for (auto &pair : this->leds)
-    {
-        result += pair.second.toJSON() + "\n";
-    }
-
-    return result;
-}
-
-String ESP8266_Hardware::getRemotes() {
-    String result = "";
-
-    for (auto &pair : this->remotes)
-    {
-        result += pair.second.toJSON() + "\n";
-    }
-
-    return result;
 }

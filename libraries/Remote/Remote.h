@@ -3,10 +3,11 @@
 
 #include <Arduino.h>
 #include <IRremoteESP8266.h>
+#include "ESP8266_Modul.h"
 #include <IRsend.h>
 #include "Config.h"
 
-class Remote {
+class Remote : public ESP8266_Modul {
 private:
     IRsend *irSend = nullptr;
 
@@ -23,8 +24,9 @@ private:
 public:
     Remote();
 
-    void init(IRsend *);
+    void init(void *);
     void run();
+    String toJSON();
 
     void setEsp8266Pin(uint8_t);
     void setName(String);
@@ -33,8 +35,6 @@ public:
     void setCommand(uint8_t);
 
     uint8_t getEsp8266Pin();
-
-    String toJSON();
 
 };
 

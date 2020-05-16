@@ -15,10 +15,10 @@ void Led::clear() {
     this->currentIndex = 0;
 }
 
-void Led::init(Adafruit_NeoPixel *strip) {
+void Led::init(void *strip) {
     if (strip == nullptr) return;
 
-    this->strip = strip;
+    this->strip = (Adafruit_NeoPixel *)strip;
     this->strip->updateType(NEO_GRB + NEO_KHZ800);
     this->strip->updateLength(this->numLedsOnStrip);
     this->strip->setPin(this->esp8266Pin);
