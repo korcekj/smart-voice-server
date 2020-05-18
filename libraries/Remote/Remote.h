@@ -23,10 +23,13 @@ private:
 
 public:
     Remote();
+    ~Remote();
 
-    void init(void *);
+    void init();
     void run();
     String toJSON();
+
+    void parseProperties(String &, String &);
 
     void setEsp8266Pin(uint8_t);
     void setName(String);

@@ -4,10 +4,12 @@ const int SONY_COMMANDS[] = {SONY_POWER, SONY_VOLUME_UP, SONY_VOLUME_DOWN, SONY_
 
 Remote::Remote() {}
 
-void Remote::init(void *irSend) {
-    if (irSend == nullptr) return;
+Remote::~Remote() { 
+    delete this->irSend; 
+}
 
-    this->irSend = (IRsend *)irSend;
+void Remote::init() {
+    this->irSend = new IRsend(this->esp8266Pin);
     this->irSend->begin();
 }
 
@@ -51,6 +53,19 @@ void Remote::setCommand(uint8_t command) {
 
 uint8_t Remote::getEsp8266Pin() {
     return this->esp8266Pin;
+}
+
+void Remote::parseProperties(String &key, String &value) {
+    if (key == R_PIN)
+        this->setEsp8266Pin(value.toInt());
+    else if (key == R_NAME)
+        this->setName(value);
+    else if (key == R_TYPE)
+        this->setType(value.toInt());
+    else if (key == R_FREQUENCY)
+        this->setFrequency(value.toInt());
+    else if (key == R_COMMAND)
+        this->setCommand(value.toInt());
 }
 
 String Remote::toJSON() {

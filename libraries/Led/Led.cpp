@@ -2,9 +2,8 @@
 
 Led::Led() {}
 
-Led::Led(uint16_t numLeds, uint8_t pin) {
-    this->setNumLedsOnStrip(numLeds);
-    this->setEsp8266Pin(pin);
+Led::~Led() { 
+    delete this->strip; 
 }
 
 void Led::clear() {
@@ -15,10 +14,8 @@ void Led::clear() {
     this->currentIndex = 0;
 }
 
-void Led::init(void *strip) {
-    if (strip == nullptr) return;
-
-    this->strip = (Adafruit_NeoPixel *)strip;
+void Led::init() {
+    this->strip = new Adafruit_NeoPixel();
     this->strip->updateType(NEO_GRB + NEO_KHZ800);
     this->strip->updateLength(this->numLedsOnStrip);
     this->strip->setPin(this->esp8266Pin);
@@ -89,6 +86,44 @@ uint32_t Led::wheel(byte WheelPos) {
 
   WheelPos -= 170;
   return strip->Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
+void Led::parseProperties(String &key, String &value) {
+    if (key == P_BRIGHTNESS)
+        this->setBrightnessOfStrip(value.toInt());
+    else if (key == P_MODE)
+        this->setActiveMode(value.toInt());
+    else if (key == P_NAME)
+        this->setName(value);
+    else if (key == P_NUM_LEDS)
+        this->setNumLedsOnStrip(value.toInt());
+    else if (key == P_PIN)
+        this->setEsp8266Pin(value.toInt());
+    else if (key == P_STATUS)
+        this->setStatusOfStrip(value.toInt());
+    else if (key == P_WAIT)
+        this->setWaitTime(value.toInt());
+    else if (key == P_COLORS) {
+        this->clearColors();
+        ESP8266_Modul::parseJsonToData(value, P_COLOR, true, this, &Led::parseColorBytes);
+    }
+}
+
+void Led::parseColorBytes(String &key, String &value) {
+    FirebaseJson json;
+    uint8_t r, g, b, a = 100;
+
+    json.setJsonData(value);
+    r = json.parse().get("r").parseResult().intValue;
+    g = json.parse().get("g").parseResult().intValue;
+    b = json.parse().get("b").parseResult().intValue;
+
+    if (json.parse().get("a").parseResult().success) {
+        String brightness = json.parse().get("a").parseResult().stringValue;
+        a = brightness.toDouble() * 100;
+    }
+        
+    this->setColorBytes(r, g, b, a);
 }
 
 void Led::clearColors() {

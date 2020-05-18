@@ -34,8 +34,8 @@ void ESP8266_Server::firebaseInit() {
 }
 
 void ESP8266_Server::hardwareInit() {
-    this->hardwareInitByType(this->firebaseRootPath + "/hardware/led", &ESP8266_Hardware::initLed);
-    this->hardwareInitByType(this->firebaseRootPath + "/hardware/remote", &ESP8266_Hardware::initRemote);
+    this->hardwareInitByType(this->firebaseRootPath + "/hardware/led", &ESP8266_Hardware::initModule<Led>);
+    this->hardwareInitByType(this->firebaseRootPath + "/hardware/remote", &ESP8266_Hardware::initModule<Remote>);
 }
 
 void ESP8266_Server::hardwareInitByType(String path, bool (ESP8266_Hardware::*f)(String, String, bool)) {
@@ -118,7 +118,7 @@ void ESP8266_Server::handleCreateLed(String url, HTTPMethod method) {
                 
                 std::vector<String> requiredParams = {"name", "numLeds", "pin"};
                 String jsonData = this->server->arg("plain");
-                String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initLed);
+                String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initModule<Led>);
 
                 if (id.length()) {
                     String json = this->hardware->getModule(id)->toJSON();
@@ -154,7 +154,7 @@ void ESP8266_Server::handleUpdateLed(String url, HTTPMethod method) {
 
                 String id = this->server->arg("id");
                 String jsonData = this->server->arg("plain");
-                bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initLed);
+                bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initModule<Led>);
                 
                 if (updated) {
                     String json = this->hardware->getModule(id)->toJSON();
@@ -213,7 +213,7 @@ void ESP8266_Server::handleCreateRemote(String url, HTTPMethod method) {
                 
                 std::vector<String> requiredParams = {"pin", "name", "type", "frequency"};
                 String jsonData = this->server->arg("plain");
-                String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initRemote);
+                String id = this->hardware->createHardware(jsonData, requiredParams, &ESP8266_Hardware::initModule<Remote>);
 
                 if (id.length()) {
                     String json = this->hardware->getModule(id)->toJSON();
@@ -249,7 +249,7 @@ void ESP8266_Server::handleUpdateRemote(String url, HTTPMethod method) {
 
                 String id = this->server->arg("id");
                 String jsonData = this->server->arg("plain");
-                bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initRemote);
+                bool updated = this->hardware->updateHardware(id, jsonData, &ESP8266_Hardware::initModule<Remote>);
                 
                 if (updated) {
                     this->sendResponse(HTTP_OK, "success", "Operation was successfully done.");

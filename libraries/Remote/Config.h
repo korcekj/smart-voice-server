@@ -1,3 +1,10 @@
+// Properties of remote
+#define R_PIN "pin"
+#define R_NAME "name"
+#define R_TYPE "type"
+#define R_FREQUENCY "frequency"
+#define R_COMMAND "command"
+
 // ESP8266 GIO PIN
 #define MIN_ESP8266_PIN 0
 #define MAX_ESP8266_PIN 16

@@ -33,12 +33,14 @@ private:
 
 public:
     Led();
-    Led(uint16_t, uint8_t);
+    ~Led();
 
-    void init(void *);
+    void init();
     void run();
     String toJSON();
 
+    void parseProperties(String &, String &);
+    void parseColorBytes(String &, String &);
     void clearColors();
 
     void setEsp8266Pin(uint8_t);
