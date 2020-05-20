@@ -64,7 +64,7 @@ const bool ESP8266_Hardware::deleteHardware(String &id, bool (ESP8266_Hardware::
 // Metoda na zmazanie konkretneho modulu podla ID: `id`
 bool ESP8266_Hardware::deleteModule(String &id) {
     // Overenie existencie modulu
-    ESP8266_Modul* module = this->getModule(id);
+    ESP8266_Module* module = this->getModule(id);
     if (module == nullptr)
         return false;
     
@@ -75,9 +75,9 @@ bool ESP8266_Hardware::deleteModule(String &id) {
 }
 
 // Metoda na ziskanie existujuceho modulu na zaklade ID: `id`
-ESP8266_Modul *ESP8266_Hardware::getModule(String &id) {
+ESP8266_Module *ESP8266_Hardware::getModule(String &id) {
     // Najdenie modulu
-    std::map<String, ESP8266_Modul *>::iterator it;
+    std::map<String, ESP8266_Module *>::iterator it;
     it = this->modules.find(id);
 
     // V pripade ze modul neexistuje, vratenie: `nullptr`

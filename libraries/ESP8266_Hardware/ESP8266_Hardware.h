@@ -4,7 +4,7 @@
 // Include potrebnych kniznic
 #include <Arduino.h>
 #include "FirebaseJson.h"
-#include "ESP8266_Modul.h"
+#include "ESP8266_Module.h"
 #include "Led.h"
 #include "Remote.h"
 #include <map>
@@ -15,7 +15,7 @@
 class ESP8266_Hardware
 {
 private:
-    std::map<String, ESP8266_Modul *> modules;
+    std::map<String, ESP8266_Module *> modules;
 
     bool containParams(std::vector<String> &, String &);
 
@@ -30,7 +30,7 @@ public:
     template <class MODULE>
     bool initModule(String, String, bool);
     bool existsModule(String &);
-    ESP8266_Modul *getModule(String &);
+    ESP8266_Module *getModule(String &);
     bool deleteModule(String &);
 };
 

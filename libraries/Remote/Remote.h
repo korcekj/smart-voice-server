@@ -4,12 +4,12 @@
 // Include potrebnych kniznic
 #include <Arduino.h>
 #include <IRremoteESP8266.h>
-#include "ESP8266_Modul.h"
+#include "ESP8266_Module.h"
 #include <IRsend.h>
 #include "Config.h"
 
-// Remote dediaci od ESP8266_Modul
-class Remote : public ESP8266_Modul {
+// Remote dediaci od ESP8266_Module
+class Remote : public ESP8266_Module {
 private:
     IRsend *irSend = nullptr;
 

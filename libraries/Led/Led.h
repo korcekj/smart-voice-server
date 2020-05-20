@@ -4,13 +4,13 @@
 // Include potrebnych kniznic
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
-#include "ESP8266_Modul.h"
+#include "ESP8266_Module.h"
 #include "Config.h"
 #include <vector>
 #include <map>
 
-// Led dediaca od ESP8266_Modul
-class Led : public ESP8266_Modul {
+// Led dediaca od ESP8266_Module
+class Led : public ESP8266_Module {
 private:
     Adafruit_NeoPixel *strip = nullptr;
 

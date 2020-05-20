@@ -127,7 +127,7 @@ void Led::parseProperties(String &key, String &value) {
         // Resetovanie farieb
         this->clearColors();
         // Znovu parsovanie poskytnutych farieb v JSON formate
-        ESP8266_Modul::parseJsonToData(value, P_COLOR, true, this, &Led::parseColorBytes);
+        ESP8266_Module::parseJsonToData(value, P_COLOR, true, this, &Led::parseColorBytes);
     }
 }
 
