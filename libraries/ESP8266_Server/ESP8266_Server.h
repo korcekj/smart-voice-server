@@ -1,11 +1,17 @@
 #ifndef ESP8266_SERVER_H
 #define ESP8266_SERVER_H
 
-#include <Arduino.h>
+// Include potrebnych kniznic
+#include <Arduino.h> 
+#include <ArduinoJson.h>
+#include <ESP8266mDNS.h>
 #include "ESP8266_Hardware.h"
 #include <ESP8266WebServer.h>
+#include "FirebaseESP8266.h"
+#include "Config.h"
 #include <vector>
 
+// ESP8266_Server
 class ESP8266_Server 
 {
 private:
@@ -36,12 +42,12 @@ private:
 
     String getDashedMacAddress();
 
-    // LED
+    // LED url
     void handleCreateLed(String, HTTPMethod = HTTP_POST);
     void handleUpdateLed(String, HTTPMethod = HTTP_POST);
     void handleDeleteLed(String, HTTPMethod = HTTP_POST);
 
-    // REMOTE
+    // REMOTE url
     void handleCreateRemote(String, HTTPMethod = HTTP_POST);
     void handleUpdateRemote(String, HTTPMethod = HTTP_POST);
     void handleDeleteRemote(String, HTTPMethod = HTTP_POST);
@@ -56,10 +62,11 @@ public:
     void handleLed();
     void handleRemote();
 
+    void setIpAddress(IPAddress);
+    void setMacAddress(String);
     String getIpAddress();
     String getMacAddress();
     String getUrl();
-    String getFirebaseError();
 };
 
 #endif // ESP8266_SERVER_H

@@ -1,4 +1,4 @@
-// Properties of led
+// Parametre
 #define P_BRIGHTNESS "brightness"
 #define P_MODE "mode"
 #define P_NAME "name"
@@ -9,27 +9,27 @@
 #define P_COLORS "colors"
 #define P_COLOR "color"
 
-// Modes
+// Mody
 #define MODE_ZERO 0
 #define MODE_ONE 1
 #define MODE_TWO 2
 
-// ESP8266 GIO PIN 
+// ESP8266 GPIO piny
 #define MIN_ESP8266_PIN 0
 #define MAX_ESP8266_PIN 16
 #define DEFAULT_ESP8266_PIN 0
 
-// Number of leds
+// Pocet lediek na pasiku
 #define MIN_NUM_OF_LEDS 1
 
-// Brigtness
+// Jas
 #define MIN_BRIGHTNESS 0
 #define MAX_BRIGHTNESS 100
 
-// Wait time
+// Cas cakania na zmenu
 #define MIN_MS 0
 #define MAX_MS 1000
 
-// Status of led
+// LED status
 #define L_ON 1
 #define L_OFF 0

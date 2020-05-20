@@ -1,12 +1,14 @@
 #ifndef REMOTE_H
 #define REMOTE_H
 
+// Include potrebnych kniznic
 #include <Arduino.h>
 #include <IRremoteESP8266.h>
 #include "ESP8266_Modul.h"
 #include <IRsend.h>
 #include "Config.h"
 
+// Remote dediaci od ESP8266_Modul
 class Remote : public ESP8266_Modul {
 private:
     IRsend *irSend = nullptr;
@@ -28,7 +30,6 @@ public:
     void init();
     void run();
     String toJSON();
-
     void parseProperties(String &, String &);
 
     void setEsp8266Pin(uint8_t);

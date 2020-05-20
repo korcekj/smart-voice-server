@@ -1,6 +1,7 @@
-#ifndef LED_H
+#ifndef LED_H 
 #define LED_H
 
+// Include potrebnych kniznic
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "ESP8266_Modul.h"
@@ -8,6 +9,7 @@
 #include <vector>
 #include <map>
 
+// Led dediaca od ESP8266_Modul
 class Led : public ESP8266_Modul {
 private:
     Adafruit_NeoPixel *strip = nullptr;
@@ -38,7 +40,7 @@ public:
     void init();
     void run();
     String toJSON();
-
+    
     void parseProperties(String &, String &);
     void parseColorBytes(String &, String &);
     void clearColors();
